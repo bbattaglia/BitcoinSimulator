@@ -1,6 +1,10 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import random
+import pprint
+
+
+from networkx.algorithms.centrality.degree_alg import in_degree_centrality
 
 def diff(list1, list2):
 	for i in range(len(list2)):
@@ -11,7 +15,7 @@ def diff(list1, list2):
 
 def addTransaction(DG,sender, receiver):
 	#one to one transaction
-	if isinstance(input, int):
+	if isinstance(sender, int):
 		if isinstance(receiver, int):
 			DG.add_edge(sender,receiver)
 		else:
@@ -42,8 +46,6 @@ def init(DG):
 	doubleOutputNode = []
 	singleInputNode = []
 	doubleInputNode = []
-	for i in range(len(inDegreeNode)):
-		inDegreeNode[i][1] = 3
 	
 	ghostInputNode = random.sample(inDegreeNode, (int(0.26*len(node))))
 	inDegreeNode = diff(inDegreeNode, ghostInputNode)
@@ -51,6 +53,8 @@ def init(DG):
 	inDegreeNode = diff(inDegreeNode, singleInputNode)
 	doubleInputNode = random.sample(inDegreeNode, (int(0.05*len(node))))
 	inDegreeNode = diff(inDegreeNode, doubleInputNode)
+	for i in range(len(inDegreeNode)):
+		inDegreeNode[i][1] = 3
 
 	ghostOutputNode = random.sample(outDegreeNode, (int(0.22*len(node))))
 	outDegreeNode = diff(outDegreeNode, ghostOutputNode)
@@ -117,24 +121,62 @@ def fillGraph(DG):
 				receiver = chooseReceiver(singleInputNode, doubleInputNode, multiInputNode)
 				if(receiver != 0 and receiver != sender):
 					break
-			addTransaction(DG, sender,receiver)
+			addTransaction(DG, sender[0],receiver[0])
 			receiver[1] = receiver[1]+ 1
 			if(receiver in singleInputNode and receiver[1] == 1):
 				singleInputNode.remove(receiver)
 			elif(receiver in doubleInputNode and receiver[1] == 2):
 				doubleInputNode.remove(receiver)
-		try:
-			currentList.remove(sender)
-		except:
-			pass
+		currentList.remove(sender)
 		if(len(singleOutputNode) == 0 and len(doubleOutputNode) == 0 and len(multiOutputNode) == 0):
 			break
 
+def calculateMetrix(DG):
+	sumOut = sumIn = singleIn = singleOut = doubleIn = doubleOut = zeroIn = zeroOut = totOut = totIn = 0
+	for i in range(len(DG)):
+		
+		totOut = totOut + DG.out_degree(i)
+		if DG.out_degree(i) ==1 :
+			singleOut = singleOut+1
+		elif DG.out_degree(i) == 2:
+			doubleOut = doubleOut+1
+		elif DG.out_degree(i) == 0:
+			zeroOut = zeroOut+1
+		elif DG.out_degree(i) >2:
+			sumOut = sumOut+1
+
+		totIn = totIn + DG.in_degree(i)
+		if DG.in_degree(i) == 1 :
+			singleIn = singleIn+1
+		elif DG.in_degree(i) == 2:
+			doubleIn = doubleIn+1
+		elif DG.in_degree(i) == 0:
+			zeroIn = zeroIn+1
+		elif DG.in_degree(i) >2:
+			sumIn = sumIn+1 
+
+	print("OutDregree (#numtransaction, #node): zero: "+str(zeroOut)+", single: "+str(singleOut)+", double: "+str(doubleOut)+". multi: "+str(sumOut))
+	print("InDegree (#numtransaction, #node): "+str(zeroIn)+", single: "+str(singleIn)+", double: "+str(doubleIn)+". multi: "+str(sumIn))
+	print("InDegree medio: "+str(totIn/len(list(DG))))
+	print("OutDegree medio: "+str(totOut/len(list(DG)))) 
+	print("ACC: "+str(nx.average_clustering(DG)))
+	
+	isolated = list(nx.isolates(DG))
+	DG.remove_nodes_from(isolated)
+	aspl = nx.average_shortest_path_length
+	print("ASPL: "+str(aspl))
+
+		
+
+
+
+	#print("ASPL: "+str(nx.average_shortest_path_length(G)))
 
 DG = nx.DiGraph()
 for i in range(100):
 	DG.add_node(i)
 fillGraph(DG)
+calculateMetrix(DG)
 nx.draw_networkx(DG)
 nx.write_gml(DG, "bitcoin.gml")
-plt.show()
+#plt.show()
