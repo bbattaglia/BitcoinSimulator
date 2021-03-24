@@ -1,7 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import random
-import pprint
+import powerlaw
 
 
 from networkx.algorithms.centrality.degree_alg import in_degree_centrality
@@ -92,7 +92,7 @@ def chooseSender(singleOutputNode, doubleOutputNode, multiOutputNode):
 	elif(randomOutput == 3 and len(multiOutputNode) !=0):
 		currentList = multiOutputNode
 		sender = random.choice(currentList)
-		index = random.randrange(3,9)
+		index = random.randrange(3,8)
 	else:
 		chooseSender(singleOutputNode, doubleOutputNode, multiOutputNode )
 	return sender, index, currentList
@@ -128,13 +128,28 @@ def fillGraph(DG):
 			elif(receiver in doubleInputNode and receiver[1] == 2):
 				doubleInputNode.remove(receiver)
 		currentList.remove(sender)
-		if(len(singleOutputNode) == 0 and len(doubleOutputNode) == 0 and len(multiOutputNode) == 0):
+		if(len(singleOutputNode) == 0 and len(doubleOutputNode) == 0 and len(multiOutputNode) == 0) :
 			break
 
+def calculateAverageDegree(G):
+	sum = 0
+	averageDegree = 0
+	averageDegree = nx.average_degree_connectivity(G)
+	for value in averageDegree:
+		sum = sum + averageDegree[value]
+	averageDegree = sum/len(averageDegree)
+	return averageDegree
+
+
 def calculateMetrix(DG):
+
+	result = powerlaw.Fit(list(DG))
+	print("alpha; "+str(result.alpha))
+
+
 	sumOut = sumIn = singleIn = singleOut = doubleIn = doubleOut = zeroIn = zeroOut = totOut = totIn = 0
 	for i in range(len(DG)):
-		
+		#in degree 
 		totOut = totOut + DG.out_degree(i)
 		if DG.out_degree(i) ==1 :
 			singleOut = singleOut+1
@@ -144,7 +159,7 @@ def calculateMetrix(DG):
 			zeroOut = zeroOut+1
 		elif DG.out_degree(i) >2:
 			sumOut = sumOut+1
-
+		#out degree
 		totIn = totIn + DG.in_degree(i)
 		if DG.in_degree(i) == 1 :
 			singleIn = singleIn+1
@@ -154,29 +169,43 @@ def calculateMetrix(DG):
 			zeroIn = zeroIn+1
 		elif DG.in_degree(i) >2:
 			sumIn = sumIn+1 
-
+	print("Transazioni per nodo:")
 	print("OutDregree (#numtransaction, #node): zero: "+str(zeroOut)+", single: "+str(singleOut)+", double: "+str(doubleOut)+". multi: "+str(sumOut))
 	print("InDegree (#numtransaction, #node): "+str(zeroIn)+", single: "+str(singleIn)+", double: "+str(doubleIn)+". multi: "+str(sumIn))
 	print("InDegree medio: "+str(totIn/len(list(DG))))
 	print("OutDegree medio: "+str(totOut/len(list(DG)))) 
-	print("ACC: "+str(nx.average_clustering(DG)))
+	print("--------------")
+ 
+	#degree medio main component
+	G = nx.to_undirected(DG)
+	mainComponents = sorted(nx.connected_components(G), key=len, reverse=True)
+	MC = G.subgraph(mainComponents[0])
+	print("Net average degree: "+str(calculateAverageDegree(DG)))
+	print("MC average degree: "+str(calculateAverageDegree(MC)))
+	print("--------------")
+
+	#average clustering coefficient
 	
-	isolated = list(nx.isolates(DG))
-	DG.remove_nodes_from(isolated)
-	aspl = nx.average_shortest_path_length
-	print("ASPL: "+str(aspl))
+	print("ACC MC: "+str(nx.average_clustering(MC)))
+	print("--------------")
+	
+	print("ASPL MC: "+str(nx.average_shortest_path_length(MC)))
+	S = [DG.subgraph(c).copy() for c in nx.weakly_connected_components(DG)]
+	for index,value in enumerate(S):
+		try: aspl
+		except NameError: aspl = 0
+		aspl = aspl + nx.average_shortest_path_length(value)
+		if index == (len(S)-1):
+			aspl = aspl/len(S)
+	print("ASPL: "+str(aspl))  
 
-		
 
-
-
-	#print("ASPL: "+str(nx.average_shortest_path_length(G)))
 
 DG = nx.DiGraph()
 for i in range(100):
 	DG.add_node(i)
 fillGraph(DG)
 calculateMetrix(DG)
-nx.draw_networkx(DG)
-nx.write_gml(DG, "bitcoin.gml")
+#nx.draw_networkx(MC)
+#nx.write_gml(DG, "bitcoin.gml")
 #plt.show()
