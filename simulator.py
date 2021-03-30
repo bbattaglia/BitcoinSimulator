@@ -12,28 +12,28 @@ def diff(list1, list2):
 	return list1
         
 
-def addTransaction(DG,sender, receiver):
+def addTransaction(DG, sender, receiver, amount):
 	global numTransaction
 	#one to one transaction
 	if isinstance(sender, int):
 		if isinstance(receiver, int):
-			DG.add_edge(sender,receiver)
+			DG.add_edge(sender,receiver, value = amount)
 			numTransaction += 1
 		else:
 			#batched transaction
 			for j in range(len(receiver)):
-				DG.add_edge(sender,receiver[j])
+				DG.add_edge(sender,receiver[j], value = amount)
 				numTransaction += 1
 	else:
 		#multi input transaction
 		for i in range(len(sender)):
 			if isinstance(receiver, int):
-				DG.add_edge(sender[i],receiver)
+				DG.add_edge(sender[i],receiver, value = amount)
 				numTransaction += 1
 			else:
 				#multi input and multi output transaction
 				for j in range(len(receiver)):
-					DG.add_edge(sender[i],receiver[j])
+					DG.add_edge(sender[i],receiver[j], value= amount)
 					numTransaction += 1
 
 
@@ -121,14 +121,15 @@ def fillGraph(DG):
 			if(data[0] != None and data[1] != None and data[2] != None):
 				break
 		sender = data[0]
+		amount = round(random.uniform(0.001,3.5), 3)
 		index = data[1]
 		currentList = data[2]
 		for i in range(index):
-			while(True):
+			while(True): 
 				receiver = chooseReceiver(singleInputNode, doubleInputNode, multiInputNode)
 				if(receiver != 0 and receiver != sender):
 					break
-			addTransaction(DG, sender[0],receiver[0])
+			addTransaction(DG, sender[0],receiver[0], amount)
 			receiver[1] = receiver[1]+ 1
 			if(receiver in singleInputNode and receiver[1] == 1):
 				singleInputNode.remove(receiver)
@@ -143,7 +144,7 @@ def checkReceiver(sender, receiver):
 		if j in sender:
 			receiver.remove(j)
 			if(len(receiver) == 0):
-				receiver = random.sample(toList,random.randint(2,int(0.09*len(toList))))
+				receiver = random.sample(toList,random.randint(2,int(0.05*len(toList))))
 				checkReceiver(sender, receiver)
 	return receiver
 
@@ -155,7 +156,8 @@ def insertMultiInput():
 		receiverNum = random.randint(2,int(0.05*len(toList)))
 		receiver = random.sample(toList,receiverNum)
 		receiver = checkReceiver(sender, receiver)
-		addTransaction(DG, sender, receiver)
+		amount = round(random.uniform(0.001,3.5), 3)
+		addTransaction(DG, sender, receiver, amount)
 
 
 
@@ -167,5 +169,6 @@ insertMultiInput()
 
 #calculateMetrix(DG)
 nx.draw_networkx(DG)
-#nx.write_gml(DG, "bitcoin.gml")
+nx.draw_networkx_edge_labels(DG, pos=nx.spring_layout(DG))
+nx.write_gexf(DG, "bitcoin.gexf")
 plt.show()
