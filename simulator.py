@@ -1,8 +1,9 @@
 import networkx as nx
-import matplotlib.pyplot as plt
 import random
 from metrix import *
 
+numTransaction = 0
+toList = []
 
 def diff(list1, list2):
 	for i in range(len(list2)):
@@ -12,30 +13,39 @@ def diff(list1, list2):
         
 
 def addTransaction(DG,sender, receiver):
+	global numTransaction
 	#one to one transaction
 	if isinstance(sender, int):
 		if isinstance(receiver, int):
 			DG.add_edge(sender,receiver)
+			numTransaction += 1
 		else:
 			#batched transaction
 			for j in range(len(receiver)):
 				DG.add_edge(sender,receiver[j])
+				numTransaction += 1
 	else:
 		#multi input transaction
 		for i in range(len(sender)):
 			if isinstance(receiver, int):
 				DG.add_edge(sender[i],receiver)
+				numTransaction += 1
 			else:
 				#multi input and multi output transaction
 				for j in range(len(receiver)):
 					DG.add_edge(sender[i],receiver[j])
+					numTransaction += 1
 
 
 def init(DG):
 	node = []
-	for i in range(len(list(DG))):
+	global toList
+	toList = list(DG)
+	multiInpuntTransaction = random.sample(toList, int(0.07*len(toList)))
+
+	for i in range(len(toList)):
 		node.append([])
-		node[i].append(list(DG)[i])
+		node[i].append(toList[i])
 		node[i].append(0)
 		
 	outDegreeNode = node[:]
@@ -61,7 +71,7 @@ def init(DG):
 	doubleOutputNode = random.sample(outDegreeNode, (int(0.5*len(node))))
 	outDegreeNode = diff(outDegreeNode, doubleOutputNode)
 
-	return ghostInputNode,singleInputNode,doubleInputNode,inDegreeNode,ghostOutputNode,singleOutputNode,doubleOutputNode,outDegreeNode
+	return ghostInputNode,singleInputNode,doubleInputNode,inDegreeNode,ghostOutputNode,singleOutputNode,doubleOutputNode,outDegreeNode,multiInpuntTransaction
 
 def chooseReceiver(singleInputNode, doubleInputNode, multiInputNode):
 	rnd = random.randrange(1,4)
@@ -105,7 +115,6 @@ def fillGraph(DG):
 	singleOutputNode = x[5]
 	doubleOutputNode = x[6]
 	multiOutputNode = x[7]
-
 	while(True):
 		while(True):
 			data = chooseSender(singleOutputNode, doubleOutputNode, multiOutputNode)
@@ -129,6 +138,24 @@ def fillGraph(DG):
 		if(len(singleOutputNode) == 0 and len(doubleOutputNode) == 0 and len(multiOutputNode) == 0) :
 			break
 
+def checkReceiver(sender, receiver):
+	for j in receiver:
+		if j in sender:
+			receiver.remove(j)
+			if(len(receiver) == 0):
+				receiver = random.sample(toList,random.randint(2,int(0.09*len(toList))))
+				checkReceiver(sender, receiver)
+	return receiver
+
+def insertMultiInput():
+	size = int(numTransaction*0.07)
+	for i in range(size):
+		senderNum = random.randint(2,int(0.05*len(toList)))
+		sender = random.sample(toList,senderNum)
+		receiverNum = random.randint(2,int(0.05*len(toList)))
+		receiver = random.sample(toList,receiverNum)
+		receiver = checkReceiver(sender, receiver)
+		addTransaction(DG, sender, receiver)
 
 
 
@@ -136,7 +163,11 @@ DG = nx.DiGraph()
 for i in range(100):
 	DG.add_node(i)
 fillGraph(DG)
-calculateMetrix(DG)
-#nx.draw_networkx(MC)
+print(numTransaction)
+insertMultiInput()
+print(numTransaction)
+
+#calculateMetrix(DG)
+nx.draw_networkx(DG)
 #nx.write_gml(DG, "bitcoin.gml")
-#plt.show()
+plt.show()
