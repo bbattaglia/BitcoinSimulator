@@ -163,9 +163,7 @@ DG = nx.DiGraph()
 for i in range(100):
 	DG.add_node(i)
 fillGraph(DG)
-print(numTransaction)
 insertMultiInput()
-print(numTransaction)
 
 #calculateMetrix(DG)
 nx.draw_networkx(DG)
