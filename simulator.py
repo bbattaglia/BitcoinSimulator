@@ -1,6 +1,7 @@
 import networkx as nx
 import random
 from metrix import *
+import sys
 
 numTransaction = 0
 toList = []
@@ -10,30 +11,36 @@ def diff(list1, list2):
 		if list2[i] in list1:
 			list1.remove(list2[i])		
 	return list1
-        
+
+
 
 def addTransaction(DG, sender, receiver, amount):
 	global numTransaction
+	color = ' '
+	if(amount>0.1):
+		color = 'r'
+	else:
+		color ='b'
 	#one to one transaction
 	if isinstance(sender, int):
 		if isinstance(receiver, int):
-			DG.add_edge(sender,receiver, value = amount)
+			DG.add_edge(sender,receiver, value = amount, edge_color = color)
 			numTransaction += 1
 		else:
 			#batched transaction
 			for j in range(len(receiver)):
-				DG.add_edge(sender,receiver[j], value = amount)
+				DG.add_edge(sender,receiver[j], value = amount, edge_color = color)
 				numTransaction += 1
 	else:
 		#multi input transaction
 		for i in range(len(sender)):
 			if isinstance(receiver, int):
-				DG.add_edge(sender[i],receiver, value = amount)
+				DG.add_edge(sender[i],receiver, value = amount, edge_color = color)
 				numTransaction += 1
 			else:
 				#multi input and multi output transaction
 				for j in range(len(receiver)):
-					DG.add_edge(sender[i],receiver[j], value= amount)
+					DG.add_edge(sender[i],receiver[j], value = amount, edge_color = color)
 					numTransaction += 1
 
 
@@ -42,7 +49,8 @@ def init(DG):
 	global toList
 	toList = list(DG)
 	multiInpuntTransaction = random.sample(toList, int(0.07*len(toList)))
-
+	#print(multiInpuntTransaction)
+	#sys.exit()
 	for i in range(len(toList)):
 		node.append([])
 		node[i].append(toList[i])
@@ -70,8 +78,13 @@ def init(DG):
 	outDegreeNode = diff(outDegreeNode, singleOutputNode) 
 	doubleOutputNode = random.sample(outDegreeNode, (int(0.5*len(node))))
 	outDegreeNode = diff(outDegreeNode, doubleOutputNode)
-
-	return ghostInputNode,singleInputNode,doubleInputNode,inDegreeNode,ghostOutputNode,singleOutputNode,doubleOutputNode,outDegreeNode,multiInpuntTransaction
+	# print("single Output "+str(len(singleOutputNode)))
+	# print("--------------")
+	# print("double Output "+str(len(doubleOutputNode)))
+	# print("--------------")
+	# print("multiple Output "+str(len(outDegreeNode)))
+	maxnumTransaction = sum((len(singleOutputNode),(2*len(doubleOutputNode)),(8*len(outDegreeNode))))
+	return ghostInputNode,singleInputNode,doubleInputNode,inDegreeNode,ghostOutputNode,singleOutputNode,doubleOutputNode,outDegreeNode,multiInpuntTransaction, maxnumTransaction
 
 def chooseReceiver(singleInputNode, doubleInputNode, multiInputNode):
 	rnd = random.randrange(1,4)
@@ -115,13 +128,18 @@ def fillGraph(DG):
 	singleOutputNode = x[5]
 	doubleOutputNode = x[6]
 	multiOutputNode = x[7]
+	#multiInpuntTransaction = x[8]
+	maxNumTransaction = x[9]
 	while(True):
 		while(True):
 			data = chooseSender(singleOutputNode, doubleOutputNode, multiOutputNode)
 			if(data[0] != None and data[1] != None and data[2] != None):
 				break
 		sender = data[0]
-		amount = round(random.uniform(0.001,3.5), 3)
+		if(numTransaction <= int(maxNumTransaction*0.9)):
+			amount = round(random.uniform(0.00001,0.1),8)
+		else:
+			amount = round(random.uniform(0.1,14),8)
 		index = data[1]
 		currentList = data[2]
 		for i in range(index):
@@ -130,7 +148,7 @@ def fillGraph(DG):
 				if(receiver != 0 and receiver != sender):
 					break
 			addTransaction(DG, sender[0],receiver[0], amount)
-			receiver[1] = receiver[1]+ 1
+			receiver[1] = receiver[1]+1
 			if(receiver in singleInputNode and receiver[1] == 1):
 				singleInputNode.remove(receiver)
 			elif(receiver in doubleInputNode and receiver[1] == 2):
@@ -156,19 +174,22 @@ def insertMultiInput():
 		receiverNum = random.randint(2,int(0.05*len(toList)))
 		receiver = random.sample(toList,receiverNum)
 		receiver = checkReceiver(sender, receiver)
-		amount = round(random.uniform(0.001,3.5), 3)
+		amount = round(random.uniform(0.001,3.5), 3) #important to define a correct amount
 		addTransaction(DG, sender, receiver, amount)
-
 
 
 DG = nx.DiGraph()
 for i in range(100):
 	DG.add_node(i)
 fillGraph(DG)
-insertMultiInput()
+#insertMultiInput()
 
 #calculateMetrix(DG)
-nx.draw_networkx(DG)
-nx.draw_networkx_edge_labels(DG, pos=nx.spring_layout(DG))
+edge = DG.edges()
+colors = nx.get_edge_attributes(DG,'edge_color').values()
+values = nx.get_edge_attributes(DG, 'value') 
+pos=nx.spring_layout(DG)
+nx.draw_networkx(DG, pos=pos, arrows = True, with_labels= True, edge_color=list(colors))
+nx.draw_networkx_edge_labels(DG, pos=pos, edge_labels=values, font_size=7)
 nx.write_gexf(DG, "bitcoin.gexf")
 plt.show()
