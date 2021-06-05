@@ -1,10 +1,14 @@
 import networkx as nx
 import random
 from metrix import *
+import numpy
 import sys
 
+numpy.seterr(divide='ignore', invalid='ignore')
 numTransaction = 0
 toList = []
+sequence = []
+NUMBER_OF_NODE = 100
 
 def diff(list1, list2):
 	for i in range(len(list2)):
@@ -25,11 +29,13 @@ def addTransaction(DG, sender, receiver, amount):
 	if isinstance(sender, int):
 		if isinstance(receiver, int):
 			DG.add_edge(sender,receiver, value = amount, edge_color = color)
+			sequence.append(amount)
 			numTransaction += 1
 		else:
 			#batched transaction
 			for j in range(len(receiver)):
 				DG.add_edge(sender,receiver[j], value = amount, edge_color = color)
+				sequence.append(amount)
 				numTransaction += 1
 	else:
 		#multi input transaction
@@ -37,11 +43,13 @@ def addTransaction(DG, sender, receiver, amount):
 			if isinstance(receiver, int):
 				DG.add_edge(sender[i],receiver, value = amount, edge_color = color)
 				numTransaction += 1
+				sequence.append(amount)
 			else:
 				#multi input and multi output transaction
 				for j in range(len(receiver)):
 					DG.add_edge(sender[i],receiver[j], value = amount, edge_color = color)
 					numTransaction += 1
+					sequence.append(amount)
 
 
 def init(DG):
@@ -78,11 +86,6 @@ def init(DG):
 	outDegreeNode = diff(outDegreeNode, singleOutputNode) 
 	doubleOutputNode = random.sample(outDegreeNode, (int(0.5*len(node))))
 	outDegreeNode = diff(outDegreeNode, doubleOutputNode)
-	# print("single Output "+str(len(singleOutputNode)))
-	# print("--------------")
-	# print("double Output "+str(len(doubleOutputNode)))
-	# print("--------------")
-	# print("multiple Output "+str(len(outDegreeNode)))
 	maxnumTransaction = sum((len(singleOutputNode),(2*len(doubleOutputNode)),(8*len(outDegreeNode))))
 	return ghostInputNode,singleInputNode,doubleInputNode,inDegreeNode,ghostOutputNode,singleOutputNode,doubleOutputNode,outDegreeNode,multiInpuntTransaction, maxnumTransaction
 
@@ -136,6 +139,8 @@ def fillGraph(DG):
 			if(data[0] != None and data[1] != None and data[2] != None):
 				break
 		sender = data[0]
+		#it should be the 10% but we'll never get the max numeber of possible transaction randomicaly
+		#so I decided to use the 85%
 		if(numTransaction <= int(maxNumTransaction*0.9)):
 			amount = round(random.uniform(0.00001,0.1),8)
 		else:
@@ -166,7 +171,7 @@ def checkReceiver(sender, receiver):
 				checkReceiver(sender, receiver)
 	return receiver
 
-def insertMultiInput():
+def insertMultiInput(DG):
 	size = int(numTransaction*0.07)
 	for i in range(size):
 		senderNum = random.randint(2,int(0.05*len(toList)))
@@ -178,18 +183,25 @@ def insertMultiInput():
 		addTransaction(DG, sender, receiver, amount)
 
 
-DG = nx.DiGraph()
-for i in range(100):
-	DG.add_node(i)
-fillGraph(DG)
-#insertMultiInput()
 
-#calculateMetrix(DG)
-edge = DG.edges()
-colors = nx.get_edge_attributes(DG,'edge_color').values()
-values = nx.get_edge_attributes(DG, 'value') 
-pos=nx.spring_layout(DG)
-nx.draw_networkx(DG, pos=pos, arrows = True, with_labels= True, edge_color=list(colors))
-nx.draw_networkx_edge_labels(DG, pos=pos, edge_labels=values, font_size=7)
-nx.write_gexf(DG, "bitcoin.gexf")
-plt.show()
+def createGraph(n):
+	DG = nx.DiGraph()
+	for i in range(n):
+		DG.add_node(i)
+	fillGraph(DG)
+	#insertMultiInput()
+	metrix = calculateMetrix(DG,sequence)
+	if(metrix):
+		edge = DG.edges()
+		colors = nx.get_edge_attributes(DG,'edge_color').values()
+		values = nx.get_edge_attributes(DG, 'value') 
+		pos=nx.circular_layout(DG)
+		nx.draw_networkx(DG, pos=pos, arrows = True, with_labels= True, edge_color = list(colors))
+		nx.draw_networkx_edge_labels(DG, pos=pos, edge_labels=values, font_size = 7)
+		nx.write_gexf(DG, "bitcoin.gexf")
+		plt.show()
+	else:
+		sequence.clear()
+		createGraph(NUMBER_OF_NODE)
+
+createGraph(NUMBER_OF_NODE)
