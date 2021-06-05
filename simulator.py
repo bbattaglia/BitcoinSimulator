@@ -8,7 +8,7 @@ numpy.seterr(divide='ignore', invalid='ignore')
 numTransaction = 0
 toList = []
 sequence = []
-NUMBER_OF_NODE = 100
+
 
 def diff(list1, list2):
 	for i in range(len(list2)):
@@ -191,17 +191,21 @@ def createGraph(n):
 	fillGraph(DG)
 	#insertMultiInput()
 	metrix = calculateMetrix(DG,sequence)
-	if(metrix):
-		edge = DG.edges()
-		colors = nx.get_edge_attributes(DG,'edge_color').values()
-		values = nx.get_edge_attributes(DG, 'value') 
-		pos=nx.circular_layout(DG)
-		nx.draw_networkx(DG, pos=pos, arrows = True, with_labels= True, edge_color = list(colors))
-		nx.draw_networkx_edge_labels(DG, pos=pos, edge_labels=values, font_size = 7)
+	if(metrix):	
 		nx.write_gexf(DG, "bitcoin.gexf")
-		plt.show()
 	else:
 		sequence.clear()
-		createGraph(NUMBER_OF_NODE)
+		createGraph(n)
+	return DG
 
-createGraph(NUMBER_OF_NODE)
+
+def plotGraph(DG):
+	colors = nx.get_edge_attributes(DG,'edge_color').values()
+	values = nx.get_edge_attributes(DG, 'value') 
+	pos=nx.circular_layout(DG)
+	nx.draw_networkx(DG, pos=pos, arrows = True, with_labels= True, edge_color = list(colors))
+	nx.draw_networkx_edge_labels(DG, pos=pos, edge_labels=values, font_size = 7)
+	plt.show()
+
+
+
