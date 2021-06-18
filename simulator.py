@@ -1,7 +1,10 @@
 import networkx as nx
 import random
+
+from networkx.readwrite import edgelist
 from metrix import *
 import numpy
+from graphviz import Digraph
 import sys
 
 numpy.seterr(divide='ignore', invalid='ignore')
@@ -18,13 +21,15 @@ def diff(list1, list2):
 
 
 
-def addTransaction(DG, sender, receiver, amount):
-	global numTransaction
-	color = ' '
-	if(amount>0.1):
-		color = 'r'
-	else:
-		color ='b'
+def addTransaction(DG, sender, receiver, amount, color = False):
+	global numTransaction	
+	if(color == False):
+		if(amount>0.1):
+			color = '#af2828'
+		else:
+			color ='#74889a'
+	else: 
+		color ='#1d812c'
 	#one to one transaction
 	if isinstance(sender, int):
 		if isinstance(receiver, int):
@@ -37,6 +42,13 @@ def addTransaction(DG, sender, receiver, amount):
 				DG.add_edge(sender,receiver[j], value = amount, edge_color = color)
 				sequence.append(amount)
 				numTransaction += 1
+	elif isinstance(sender, str):
+		if isinstance(receiver, str):
+			DG.add_edge(sender,receiver, value = amount, edge_color = color)
+		else:
+			#batched transaction
+			for j in range(len(receiver)):
+				DG.add_edge(sender,receiver[j], value = amount, edge_color = color)
 	else:
 		#multi input transaction
 		for i in range(len(sender)):
@@ -50,6 +62,33 @@ def addTransaction(DG, sender, receiver, amount):
 					DG.add_edge(sender[i],receiver[j], value = amount, edge_color = color)
 					numTransaction += 1
 					sequence.append(amount)
+					
+
+def deleteTransaction(DG, sender, receiver, amount):
+	if isinstance(sender, str):
+		if isinstance(receiver, str):
+			attribute = DG[sender][receiver]["value"]
+			if(attribute == amount):
+				DG.remove_edge(sender,receiver)
+		else:
+			#batched transaction
+			for j in range(len(receiver)):
+				attribute = DG[sender][receiver[j]]["value"]
+				if(attribute == amount):
+					DG.remove_edge(sender, receiver[j])
+	else:
+		#multi input transaction
+		for i in range(len(sender)):
+			if isinstance(receiver, int):
+				attribute = DG[sender[i]][receiver]["value"]
+				if(attribute == amount):
+					DG.remove_edge(sender[i],receiver)
+			else:
+				#multi input and multi output transaction
+				for j in range(len(receiver)):
+					attribute = DG[sender[i]][receiver[j]]["value"]
+					if(attribute == amount):
+						DG.remove_edge(sender[i],receiver[j])
 
 
 def init(DG):
@@ -185,9 +224,8 @@ def insertMultiInput(DG):
 
 
 def createGraph(n):
-	DG = nx.DiGraph()
-	for i in range(n):
-		DG.add_node(i)
+	DG = nx.MultiDiGraph()
+	DG.add_nodes_from(range(1,100))
 	fillGraph(DG)
 	#insertMultiInput()
 	metrix = calculateMetrix(DG,sequence)
@@ -198,14 +236,23 @@ def createGraph(n):
 		createGraph(n)
 	return DG
 
+def cleanDictionary(dict):
+	new_dict = {}
+	for key in dict:
+		values = dict[key]
+		tmp_list = list(key)
+		tmp_list.remove(tmp_list[-1])
+		key = tuple(tmp_list)
+		new_dict[key] = values
+	return new_dict
 
 def plotGraph(DG):
 	colors = nx.get_edge_attributes(DG,'edge_color').values()
-	values = nx.get_edge_attributes(DG, 'value') 
-	pos=nx.circular_layout(DG)
-	nx.draw_networkx(DG, pos=pos, arrows = True, with_labels= True, edge_color = list(colors))
-	nx.draw_networkx_edge_labels(DG, pos=pos, edge_labels=values, font_size = 7)
+	values = nx.get_edge_attributes(DG, 'value')
+	values = cleanDictionary(values)
+
+	position = nx.circular_layout(DG)
+	nx.draw_networkx(DG, position, node_color="orange", with_labels= True, edgelist = {})
+	nx.draw_networkx_edges(DG, position, arrows = True, edge_color=list(colors), arrowsize = 7, connectionstyle='arc3,rad=0.2')
+	nx.draw_networkx_edge_labels(DG,position, edge_labels=values, font_size = 7)
 	plt.show()
-
-
-
