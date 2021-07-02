@@ -1,11 +1,7 @@
 import networkx as nx
 import random
-
-from networkx.readwrite import edgelist
 from metrix import *
 import numpy
-from graphviz import Digraph
-import sys
 
 numpy.seterr(divide='ignore', invalid='ignore')
 numTransaction = 0
@@ -67,28 +63,36 @@ def addTransaction(DG, sender, receiver, amount, color = False):
 def deleteTransaction(DG, sender, receiver, amount):
 	if isinstance(sender, str):
 		if isinstance(receiver, str):
-			attribute = DG[sender][receiver]["value"]
-			if(attribute == amount):
-				DG.remove_edge(sender,receiver)
+			attribute = DG.get_edge_data(sender,receiver)
+			for k in range(len(attribute)):
+				value = attribute[k]['value']
+				if(value == amount):
+					DG.remove_edge(sender,receiver)
 		else:
 			#batched transaction
 			for j in range(len(receiver)):
-				attribute = DG[sender][receiver[j]]["value"]
-				if(attribute == amount):
-					DG.remove_edge(sender, receiver[j])
+				attribute = DG.get_edge_data(sender,receiver[j])
+				for k in range(len(attribute)):
+					value = attribute[k]['value']
+					if(value == amount):
+						DG.remove_edge(sender, receiver[j])
 	else:
 		#multi input transaction
 		for i in range(len(sender)):
 			if isinstance(receiver, int):
-				attribute = DG[sender[i]][receiver]["value"]
-				if(attribute == amount):
-					DG.remove_edge(sender[i],receiver)
+				attribute = DG.get_edge_data(sender[i],receiver)
+				for k in range(len(attribute)):
+					value = attribute[k]['value']
+					if(value == amount):
+						DG.remove_edge(sender[i],receiver)
 			else:
 				#multi input and multi output transaction
 				for j in range(len(receiver)):
-					attribute = DG[sender[i]][receiver[j]]["value"]
-					if(attribute == amount):
-						DG.remove_edge(sender[i],receiver[j])
+					attribute = DG.get_edge_data(sender[i],receiver[j])
+					for k in range(len(attribute)):
+						value = attribute[k]['value']
+						if(value == amount):
+							DG.remove_edge(sender[i],receiver[j])
 
 
 def init(DG):

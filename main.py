@@ -1,20 +1,38 @@
-from networkx.readwrite.json_graph import adjacency
 from metrix import *
 from simulator import *
 import os
 from varname import argname
 
 
+
 NUMBER_OF_NODE = 100
 sequence = []
 DG = nx.DiGraph()
 
+def identifyActivity(DG, node):
+    path = []
+    ego_network = nx.ego_graph(DG,'48',5)
+    adjacent_node = ego_network.edges('48')
+    #plotGraph(ego_network)
+    # path = nx.all_simple_paths(ego_network, '50', '48')
+    # print(list(path))
+    for u, v in adjacent_node: 
+        try:
+            path.append(nx.all_simple_paths(ego_network, str(v), node))
+        except:
+            pass
+    for i in range(len(path)):
+        print(list(path[i]))
+    
+
+
 
 def addMLTransaction(DG):
-    addTransaction(DG, '6', '33', 0.058764, color = True)
-    addTransaction(DG, '33', '20', 0.058763, color = True)
-    addTransaction(DG, '20', '54', 0.058762, color = True)
-    addTransaction(DG, '54', '77', 0.058761, color = True)
+    addTransaction(DG, '48', '50', 0.058764, color = True)
+    addTransaction(DG, '50', '55', 0.058763, color = True)
+    addTransaction(DG, '55', '13', 0.058762, color = True)
+    addTransaction(DG, '13', '91', 0.058761, color = True)
+    addTransaction(DG, '91', '48', 0.056, color = True)    
 
 
 
@@ -46,22 +64,16 @@ except IOError:
     #plotGraph(DG)
 
 
-metrix = graphMetrix(DG)
-inDegree = metrix[1]
-outDegree = metrix[2]
-saveResultAsFile(inDegree)
-saveResultAsFile(outDegree)
+#metrix = graphMetrix(DG,'48')
+#new_metrix = graphMetrix(DG,'48') #return density, in_degree, out_degree, density, closeness, betweenness
+# inDegree = metrix[1]
+# outDegree = metrix[2]
+# saveResultAsFile(inDegree)
+# saveResultAsFile(outDegree)
 
-# addTransaction(DG, '66', '37', 0.058764, color = True)
-# addTransaction(DG, '66', '37', 1.2, color = True)
-# print(DG.edges('66'))
-# plotGraph(DG)
-#deleteTransaction(DG, '77', '76',1.2)
-#plotGraph(DG)
+addMLTransaction(DG)
+identifyActivity(DG, '48')
 
-#addMLTransaction(DG)
-
-#metrix = graphMetrix(DG) #return density, in_degree, out_degree, density, closeness, betweenness
 
 
 
