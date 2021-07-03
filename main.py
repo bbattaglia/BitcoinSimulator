@@ -11,23 +11,53 @@ DG = nx.DiGraph()
 
 def identifyActivity(DG, node):
     path = []
-    ego_network = nx.ego_graph(DG,'48',5)
-    adjacent_node = ego_network.edges('48')
-    #plotGraph(ego_network)
-    # path = nx.all_simple_paths(ego_network, '50', '48')
-    # print(list(path))
+    visitedNode = []
+    i = 1
+    addTransaction(DG, '50', '48', 0.04, color = True)
+    while(True):
+
+        ego_network = nx.ego_graph(DG,node,i)
+        if(i == 1):
+            adjacent_node = ego_network.edges()
+            adjacent_node = list(adjacent_node)
+            for i in range(len(adjacent_node)):
+                current = adjacent_node[i][1]
+                if(current == node):
+                    firstValue = ego_network.get_edge_data(node,adjacent_node[i][0])
+                    secondValue = ego_network.get_edge_data(adjacent_node[i][0],node)
+                    if(firstValue[0]['value'] > secondValue[0]['value']):
+                        path.append(node)
+                        path.append(adjacent_node[i][0])
+            break
+    
+    
+def identifyMixerAddress(DG, node):  
+    
+    path = []
+    toReturn = []
+    ego_network = nx.ego_graph(DG,node,5)
+    adjacent_node = ego_network.edges(node)
+    
     for u, v in adjacent_node: 
         try:
-            path.append(nx.all_simple_paths(ego_network, str(v), node))
+            path.extend(nx.all_simple_paths(ego_network, str(v), node))
         except:
             pass
     for i in range(len(path)):
-        print(list(path[i]))
+        for j in range(len(path[i])):
+            try:
+                if ego_network.nodes[path[i][j]]['mixer'] == True:
+                    toReturn.append(path[i])
+                    print("hi")
+            except:
+                pass
+    print(toReturn)
     
 
 
 
 def addMLTransaction(DG):
+    DG.nodes['22']['mixer'] = True
     addTransaction(DG, '48', '50', 0.058764, color = True)
     addTransaction(DG, '50', '55', 0.058763, color = True)
     addTransaction(DG, '55', '13', 0.058762, color = True)
@@ -72,8 +102,8 @@ except IOError:
 # saveResultAsFile(outDegree)
 
 addMLTransaction(DG)
-identifyActivity(DG, '48')
-
+# identifyActivity(DG, '48')
+identifyMixerAddress(DG, '48')
 
 
 

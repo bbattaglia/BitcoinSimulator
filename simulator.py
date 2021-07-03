@@ -1,6 +1,6 @@
 import networkx as nx
 import random
-from metrix import *
+import metrix as mt
 import numpy
 
 numpy.seterr(divide='ignore', invalid='ignore')
@@ -231,9 +231,8 @@ def createGraph(n):
 	DG = nx.MultiDiGraph()
 	DG.add_nodes_from(range(1,100))
 	fillGraph(DG)
-	#insertMultiInput()
-	metrix = calculateMetrix(DG,sequence)
-	if(metrix):	
+	result = mt.calculateMetrix(DG,sequence)
+	if(result):	
 		nx.write_gexf(DG, "bitcoin.gexf")
 	else:
 		sequence.clear()
