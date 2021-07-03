@@ -2,6 +2,7 @@ import networkx as nx
 import random
 import metrix as mt
 import numpy
+from matplotlib import pyplot as plt
 
 numpy.seterr(divide='ignore', invalid='ignore')
 numTransaction = 0
