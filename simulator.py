@@ -18,7 +18,7 @@ def diff(list1, list2):
 
 
 
-def addTransaction(DG, sender, receiver, amount, color = False):
+def addTransaction(DG, sender, receiver, amount, timestamp, color = False):
 	global numTransaction	
 	if(color == False):
 		if(amount>0.1):
@@ -30,33 +30,33 @@ def addTransaction(DG, sender, receiver, amount, color = False):
 	#one to one transaction
 	if isinstance(sender, int):
 		if isinstance(receiver, int):
-			DG.add_edge(sender,receiver, value = amount, edge_color = color)
+			DG.add_edge(sender,receiver, value = amount, date = timestamp, edge_color = color)
 			sequence.append(amount)
 			numTransaction += 1
 		else:
 			#batched transaction
 			for j in range(len(receiver)):
-				DG.add_edge(sender,receiver[j], value = amount, edge_color = color)
+				DG.add_edge(sender,receiver[j], value = amount, date = timestamp, edge_color = color)
 				sequence.append(amount)
 				numTransaction += 1
 	elif isinstance(sender, str):
 		if isinstance(receiver, str):
-			DG.add_edge(sender,receiver, value = amount, edge_color = color)
+			DG.add_edge(sender,receiver, value = amount, date = timestamp, edge_color = color)
 		else:
 			#batched transaction
 			for j in range(len(receiver)):
-				DG.add_edge(sender,receiver[j], value = amount, edge_color = color)
+				DG.add_edge(sender,receiver[j], value = amount, date = timestamp, edge_color = color)
 	else:
 		#multi input transaction
 		for i in range(len(sender)):
 			if isinstance(receiver, int):
-				DG.add_edge(sender[i],receiver, value = amount, edge_color = color)
+				DG.add_edge(sender[i],receiver, value = amount, date = timestamp, edge_color = color)
 				numTransaction += 1
 				sequence.append(amount)
 			else:
 				#multi input and multi output transaction
 				for j in range(len(receiver)):
-					DG.add_edge(sender[i],receiver[j], value = amount, edge_color = color)
+					DG.add_edge(sender[i],receiver[j], value = amount, date = timestamp, edge_color = color)
 					numTransaction += 1
 					sequence.append(amount)
 					
@@ -192,11 +192,12 @@ def fillGraph(DG):
 		index = data[1]
 		currentList = data[2]
 		for i in range(index):
+			timestamp = random.randint(1620134991,1625405391)
 			while(True): 
 				receiver = chooseReceiver(singleInputNode, doubleInputNode, multiInputNode)
 				if(receiver != 0 and receiver != sender):
 					break
-			addTransaction(DG, sender[0],receiver[0], amount)
+			addTransaction(DG, sender[0],receiver[0], amount, timestamp)
 			receiver[1] = receiver[1]+1
 			if(receiver in singleInputNode and receiver[1] == 1):
 				singleInputNode.remove(receiver)

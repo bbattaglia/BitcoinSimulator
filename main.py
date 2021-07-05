@@ -31,38 +31,59 @@ def identifyActivity(DG, node):
             break
     
     
-def identifyMixerAddress(DG, node):  
+def identifyML(DG, node):  
     
     path = []
     toReturn = []
     ego_network = nx.ego_graph(DG,node,5)
     adjacent_node = ego_network.edges(node)
     
+    #calculate all the paths from the node to the node
     for u, v in adjacent_node: 
         try:
             path.extend(nx.all_simple_paths(ego_network, str(v), node))
         except:
             pass
+    currentTimestamp = 0
+    #if a node of the path is in a mixer cluster, then the path could be dangerous
     for i in range(len(path)):
+        previousTimestamp = 0
+        validPath = True
         for j in range(len(path[i])):
             try:
-                if ego_network.nodes[path[i][j]]['mixer'] == True:
+                mixer = ego_network.nodes[path[i][j]]['mixer']
+                if mixer:
                     toReturn.append(path[i])
-                    print("hi")
+                    break
             except:
                 pass
+            #if not, it is verified that the node have a coherent timestamp
+            if(j+1) < len(path[i]) and validPath == True:
+                currentTimestamp = DG.get_edge_data(path[i][j],path[i][j+1])
+                if(j == 0):
+                    previousTimestamp = DG.get_edge_data(node,path[i][j])
+
+                if(previousTimestamp[0]['date']< currentTimestamp[0]['date']):
+                    previousTimestamp = currentTimestamp
+                else:
+                    validPath = False
+                    break
+
+            if (j+2) == len(path[i]) and validPath:
+                toReturn.append(path[i])
+                
     print(toReturn)
     
 
 
 
 def addMLTransaction(DG):
-    DG.nodes['22']['mixer'] = True
-    addTransaction(DG, '48', '50', 0.058764, color = True)
-    addTransaction(DG, '50', '55', 0.058763, color = True)
-    addTransaction(DG, '55', '13', 0.058762, color = True)
-    addTransaction(DG, '13', '91', 0.058761, color = True)
-    addTransaction(DG, '91', '48', 0.056, color = True)    
+    DG.nodes['91']['mixer'] = True
+    addTransaction(DG, '48', '50', 0.058764, 1620575060, color = True)
+    addTransaction(DG, '50', '55', 0.058763, 1620575061, color = True)
+    addTransaction(DG, '55', '13', 0.058762, 1620575062, color = True)
+    addTransaction(DG, '13', '91', 0.058761, 1620575063, color = True)
+    addTransaction(DG, '91', '48', 0.056, 1620575064, color = True)    
 
 
 
@@ -89,6 +110,7 @@ try:
             DG = nx.read_gexf('bitcoin.gexf')
             #plotGraph(DG)
 except IOError:
+    print("entro")
     DG = createGraph(NUMBER_OF_NODE)    
     calculateMetrix(DG, findSequence(DG))
     #plotGraph(DG)
@@ -102,8 +124,10 @@ except IOError:
 # saveResultAsFile(outDegree)
 
 addMLTransaction(DG)
-# identifyActivity(DG, '48')
-identifyMixerAddress(DG, '48')
-
+#identifyActivity(DG, '48')
+identifyML(DG, '48')
+# DG.nodes['22']['mixer'] = True
+# attribute = DG.get_edge_data('42','19')
+# print(attribute[0]['date'])
 
 
