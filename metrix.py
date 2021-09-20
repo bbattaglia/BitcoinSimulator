@@ -20,7 +20,7 @@ def calculateMetrix(DG,sequence):
 	fit = powerlaw.Fit(sequence) 
 	print(fit.alpha)
 	print("--------------")
-	if(1.75<fit.alpha and fit.alpha > 3.5):
+	if(1.9<fit.alpha and fit.alpha > 5):
 		return False
 	else:			
 		for i in range(1,len(DG)):
@@ -81,31 +81,29 @@ def calculateMetrix(DG,sequence):
 def graphMetrix(DG, node):
 	density = nx.density(DG)
 	print('Density: '+str(density))
+	print('--------------')
 	egoGraph = nx.ego_graph(DG, node, 5)
 	closeness = nx.closeness_centrality(egoGraph)
 	print('Closeness: '+str(closeness))
 	print('--------------')
-	#betweenness = nx.betweenness_centrality(DG)
-	#print('Betweenness: '+str(betweenness))
-	print('--------------')
 	G = nx.DiGraph.to_undirected(DG)
 	cliques_containing_node = nx.cliques_containing_node(G, node)
-	print("cliques_containing_node"+str(cliques_containing_node))
+	print("cliques_containing_node: "+str(cliques_containing_node))
 	print('----------------------')
 	node_clique_number = nx.node_clique_number(G,node)
-	print("node_clique_number"+str(node_clique_number))
+	print("node_clique_number: "+str(node_clique_number))
 	print('----------------------')
 	number_of_cliques = nx. number_of_cliques(G, node)
-	print("number_of_cliques"+str(number_of_cliques))
+	print("number_of_cliques: "+str(number_of_cliques))
 	print('----------------------')
-	k_clique_communiti = k_clique_communities(G, 3)
-	print("k_clique_communities"+str(list(k_clique_communiti)))
-	print('----------------------')
+	#k_clique_communiti = k_clique_communities(G, 3)
+	#print("k_clique_communities: "+str(list(k_clique_communiti)))
+	#print('----------------------')
 	in_degree = sorted(DG.in_degree(), key=lambda x: x[1], reverse=True)
 	out_degree = sorted(DG.out_degree(), key=lambda x: x[1], reverse=True)
 	# #it's the equivalent of an adjacency  matrix
-	adjacency_matrix = nx.to_numpy_matrix(DG)
-	df = pd.DataFrame(data=adjacency_matrix.astype(int))
-	df.to_csv('res/outfile.csv', sep=' ', header=True, index=True)
-	return density, in_degree, out_degree, density, closeness#, betweenness
+	#adjacency_matrix = nx.to_numpy_matrix(DG)
+	#df = pd.DataFrame(data=adjacency_matrix.astype(int))
+	#df.to_csv('res/outfile.csv', sep=' ', header=True, index=True)
+	return density, closeness, in_degree, out_degree, closeness#, betweenness
 	

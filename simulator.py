@@ -3,6 +3,9 @@ import random
 import metrix as mt
 import numpy
 from matplotlib import pyplot as plt
+import calendar;
+import time;
+
 
 numpy.seterr(divide='ignore', invalid='ignore')
 numTransaction = 0
@@ -22,7 +25,7 @@ def addTransaction(DG, sender, receiver, amount, timestamp, color = False):
 	global numTransaction	
 	if(color == False):
 		if(amount>0.1):
-			color = '#af2828'
+			color = '#FF0000'
 		else:
 			color ='#74889a'
 	else: 
@@ -183,16 +186,15 @@ def fillGraph(DG):
 			if(data[0] != None and data[1] != None and data[2] != None):
 				break
 		sender = data[0]
-		#it should be the 10% but we'll never get the max numeber of possible transaction randomicaly
-		#so I decided to use the 85%
+		#it has to be the 10% but we'll never get the max number of possible transaction randomicaly
 		if(numTransaction <= int(maxNumTransaction*0.9)):
-			amount = round(random.uniform(0.00001,0.1),8)
+			amount = round(random.uniform(0.00001,2.5),8)
 		else:
-			amount = round(random.uniform(0.1,14),8)
+			amount = round(random.uniform(2.6,14),8)
 		index = data[1]
 		currentList = data[2]
 		for i in range(index):
-			timestamp = random.randint(1620134991,1625405391)
+			timestamp = random.randint(1620134991,calendar.timegm(time.gmtime()))
 			while(True): 
 				receiver = chooseReceiver(singleInputNode, doubleInputNode, multiInputNode)
 				if(receiver != 0 and receiver != sender):
@@ -231,7 +233,7 @@ def insertMultiInput(DG):
 
 def createGraph(n):
 	DG = nx.MultiDiGraph()
-	DG.add_nodes_from(range(1,100))
+	DG.add_nodes_from(range(1,n))
 	fillGraph(DG)
 	result = mt.calculateMetrix(DG,sequence)
 	if(result):	

@@ -9,6 +9,8 @@ NUMBER_OF_NODE = 100
 sequence = []
 DG = nx.DiGraph()
 
+
+#-------------------------------Functions definition-----------------------------
 def identifyActivity(DG, node):
     path = []
     visitedNode = []
@@ -35,7 +37,7 @@ def identifyML(DG, node):
     
     path = []
     toReturn = []
-    ego_network = nx.ego_graph(DG,node,5)
+    ego_network = nx.ego_graph(DG,node,radius = 5)
     adjacent_node = ego_network.edges(node)
     
     #calculate all the paths from the node to the node
@@ -71,8 +73,8 @@ def identifyML(DG, node):
 
             if (j+2) == len(path[i]) and validPath:
                 toReturn.append(path[i])
-                
-    print(toReturn)
+    for i in toReturn:
+        print(str(i))
     
 
 
@@ -104,30 +106,30 @@ def findSequence(DG):
         sequence.append(amount[i])
     return sequence
 
+
+#------------------------main block----------------------------
 try:
     with open('bitcoin.gexf') as f:
         if(f):
             DG = nx.read_gexf('bitcoin.gexf')
             #plotGraph(DG)
 except IOError:
-    print("entro")
     DG = createGraph(NUMBER_OF_NODE)    
-    calculateMetrix(DG, findSequence(DG))
+    #calculateMetrix(DG, findSequence(DG))
     #plotGraph(DG)
 
 
 #metrix = graphMetrix(DG,'48')
 #new_metrix = graphMetrix(DG,'48') #return density, in_degree, out_degree, density, closeness, betweenness
+
 # inDegree = metrix[1]
 # outDegree = metrix[2]
 # saveResultAsFile(inDegree)
 # saveResultAsFile(outDegree)
 
 addMLTransaction(DG)
-#identifyActivity(DG, '48')
 identifyML(DG, '48')
-# DG.nodes['22']['mixer'] = True
+#identifyActivity(DG, '48')
+#DG.nodes['100']['mixer'] = True
 # attribute = DG.get_edge_data('42','19')
 # print(attribute[0]['date'])
-
-
