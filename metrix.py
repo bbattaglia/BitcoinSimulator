@@ -20,7 +20,7 @@ def calculateMetrix(DG,sequence):
 	fit = powerlaw.Fit(sequence) 
 	print(fit.alpha)
 	print("--------------")
-	if(1.9<fit.alpha and fit.alpha > 5):
+	if(1.9<fit.alpha and fit.alpha > 2.6):
 		return False
 	else:			
 		for i in range(1,len(DG)):
