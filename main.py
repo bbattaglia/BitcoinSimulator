@@ -115,9 +115,11 @@ try:
             #plotGraph(DG)
 except IOError:
     DG = createGraph(NUMBER_OF_NODE)    
-    #calculateMetrix(DG, findSequence(DG))
-    #plotGraph(DG)
-
+    calculateMetrix(DG, findSequence(DG))
+    plotGraph(DG)
+    
+addMLTransaction(DG)
+identifyML(DG, '48')
 
 #metrix = graphMetrix(DG,'48')
 #new_metrix = graphMetrix(DG,'48') #return density, in_degree, out_degree, density, closeness, betweenness
@@ -127,8 +129,7 @@ except IOError:
 # saveResultAsFile(inDegree)
 # saveResultAsFile(outDegree)
 
-addMLTransaction(DG)
-identifyML(DG, '48')
+
 #identifyActivity(DG, '48')
 #DG.nodes['100']['mixer'] = True
 # attribute = DG.get_edge_data('42','19')
